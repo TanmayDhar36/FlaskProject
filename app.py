@@ -3,16 +3,21 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
+# Initialize app
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = 'Tanmay@98'  # 🔐 Replace with a strong key in production
 
-# Render uses DATABASE_URL env variable for PostgreSQL
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+# Setup PostgreSQL database (Render or local fallback)
+db_uri = os.environ.get(
+    'DATABASE_URL', 
+    'postgresql://postgres:Tanmay%4098@localhost:5432/flask_blog'
+)
+app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# ------------------ MODELS ------------------
+# ------------------ Models ------------------
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -28,8 +33,7 @@ class Blog(db.Model):
     content = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-
-# ------------------ ROUTES ------------------
+# ------------------ Routes ------------------
 
 @app.route('/')
 def home():
@@ -39,32 +43,36 @@ def home():
 def about():
     return render_template('about.html')
 
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
         password = generate_password_hash(request.form['password'])
-        existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
+        
+        existing_user = User.query.filter(
+            (User.username == username) | (User.email == email)
+        ).first()
 
         if existing_user:
             return "User already exists!"
 
-        user = User(username=username, email=email, password=password)
-        db.session.add(user)
+        new_user = User(username=username, email=email, password=password)
+        db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
 
     return render_template('register.html')
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username_or_email = request.form['username']
         password = request.form['password']
-        user = User.query.filter((User.username == username_or_email) | (User.email == username_or_email)).first()
+        
+        user = User.query.filter(
+            (User.username == username_or_email) | (User.email == username_or_email)
+        ).first()
 
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
@@ -74,12 +82,10 @@ def login():
 
     return render_template('login.html')
 
-
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
     return redirect(url_for('home'))
-
 
 @app.route('/submit_blog', methods=['GET', 'POST'])
 def submit_blog():
@@ -96,12 +102,10 @@ def submit_blog():
 
     return render_template('submit_blog.html')
 
-
 @app.route('/technical_blogs')
 def technical_blogs():
     blogs = Blog.query.order_by(Blog.id.desc()).all()
     return render_template('technical_blogs.html', blogs=blogs)
-
 
 @app.route('/dashboard')
 def dashboard():
@@ -111,10 +115,9 @@ def dashboard():
     user_blogs = Blog.query.filter_by(user_id=session['user_id']).all()
     return render_template('dashboard.html', blogs=user_blogs)
 
-
-# ------------------ INIT ------------------
+# ------------------ Start App ------------------
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()  # Run only once on startup to initialize DB
+        db.create_all()  # Only runs if DB tables don't exist
     app.run(debug=True)
