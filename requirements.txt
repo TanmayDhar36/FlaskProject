@@ -1,4 +1,4 @@
-pip freeze
+freeze
 Flask
 Flask_SQLAlchemy
 psycopg2-binary
