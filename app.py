@@ -5,13 +5,12 @@ import os
 
 # Initialize app
 app = Flask(__name__)
-app.secret_key = 'Tanmay@98'  # 🔐 Replace with a strong key in production
+app.secret_key = os.environ.get('SECRET_KEY', 'Tanmay@98')  # Secure with env var
 
-# Setup PostgreSQL database (Render or local fallback)
-db_uri = os.environ.get(
-    'DATABASE_URL', 
-    'postgresql://postgres:oAwIDzz0rh9lRpauWxu36kUuPJ1taabF@localhost:5432/flask_blog'
-)
+# Setup PostgreSQL database (Render)
+db_uri = os.environ.get('DATABASE_URL')
+if not db_uri:
+    raise ValueError('DATABASE_URL environment variable is not set')
 app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -25,7 +24,6 @@ class User(db.Model):
     email = db.Column(db.String(120), nullable=False, unique=True)
     password = db.Column(db.String(200), nullable=False)
     blogs = db.relationship('Blog', backref='author', lazy=True)
-
 
 class Blog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -58,9 +56,13 @@ def register():
             return "User already exists!"
 
         new_user = User(username=username, email=email, password=password)
-        db.session.add(new_user)
-        db.session.commit()
-        return redirect(url_for('login'))
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+            return redirect(url_for('login'))
+        except Exception as e:
+            db.session.rollback()
+            return f"Error: {str(e)}"
 
     return render_template('register.html')
 
@@ -96,9 +98,13 @@ def submit_blog():
         title = request.form['title']
         content = request.form['content']
         blog = Blog(title=title, content=content, user_id=session['user_id'])
-        db.session.add(blog)
-        db.session.commit()
-        return redirect(url_for('technical_blogs'))
+        try:
+            db.session.add(blog)
+            db.session.commit()
+            return redirect(url_for('technical_blogs'))
+        except Exception as e:
+            db.session.rollback()
+            return f"Error: {str(e)}"
 
     return render_template('submit_blog.html')
 
@@ -116,8 +122,10 @@ def dashboard():
     return render_template('dashboard.html', blogs=user_blogs)
 
 # ------------------ Start App ------------------
-
+# Comment out for Render deployment with Gunicorn
+"""
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()  # Only runs if DB tables don't exist
     app.run(debug=True)
+"""
