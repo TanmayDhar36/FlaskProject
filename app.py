@@ -10,7 +10,7 @@ app.secret_key = 'Tanmay@98'  # 🔐 Replace with a strong key in production
 # Setup PostgreSQL database (Render or local fallback)
 db_uri = os.environ.get(
     'DATABASE_URL', 
-    'postgresql://postgres:Tanmay%4098@localhost:5432/flask_blog'
+    'postgresql://postgres:oAwIDzz0rh9lRpauWxu36kUuPJ1taabF@localhost:5432/flask_blog'
 )
 app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
