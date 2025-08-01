@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Technical Blogs{% endblock %}
+{% block content %}
+<h2 class="mb-4">All Technical Blogs</h2>
+{% for blog in blogs %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <h4 class="card-title">{{ blog.title }}</h4>
+      <h6 class="card-subtitle text-muted mb-2">by {{ blog.author.username }}</h6>
+      <p class="card-text">{{ blog.content[:300] }}...</p>
+    </div>
+  </div>
+{% else %}
+  <p>No blogs posted yet.</p>
+{% endfor %}
+{% endblock %}

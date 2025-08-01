@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Your Dashboard{% endblock %}
+{% block content %}
+<h3>Your Submitted Blogs</h3>
+{% for blog in blogs %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">{{ blog.title }}</h5>
+      <p class="card-text">{{ blog.content[:200] }}...</p>
+    </div>
+  </div>
+{% else %}
+  <p>You haven't posted any blogs yet.</p>
+{% endfor %}
+{% endblock %}
